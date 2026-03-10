@@ -33,46 +33,76 @@ load_config() {
         echo "参考: https://github.com/IsaacZhaoo/cloud-openclaw#1-首次配置"
         exit 1
     fi
+
+    # 验证配置格式安全
+    validate_host "$CLOUD_HOST"
+    validate_safe_string "$CLOUD_USER" "CLOUD_USER"
+    if [[ -n "$CLOUD_PORT" ]]; then
+        validate_number "$CLOUD_PORT" "CLOUD_PORT"
+    fi
 }
 
-# 构建 SSH 命令
+# 构建 SSH 命令数组（设置全局 SSH_CMD）
 build_ssh_cmd() {
-    local cmd="$1"
-
-    local ssh_cmd="ssh"
+    SSH_CMD=(ssh)
 
     # 添加端口
     if [[ "$CLOUD_PORT" != "22" ]]; then
-        ssh_cmd="$ssh_cmd -p $CLOUD_PORT"
+        SSH_CMD+=(-p "$CLOUD_PORT")
     fi
 
     # 添加密钥（如配置）
     if [[ -n "$SSH_KEY_PATH" ]]; then
         local expanded_key="${SSH_KEY_PATH/#\~/$HOME}"
         if [[ -f "$expanded_key" ]]; then
-            ssh_cmd="$ssh_cmd -i '$expanded_key'"
+            SSH_CMD+=(-i "$expanded_key")
         fi
     fi
 
-    ssh_cmd="$ssh_cmd ${CLOUD_USER}@${CLOUD_HOST}"
-
-    echo "$ssh_cmd '$cmd'"
+    SSH_CMD+=("${CLOUD_USER}@${CLOUD_HOST}")
 }
 
 # SSH 执行
 ssh_exec() {
     local cmd="$1"
-    local ssh_cmd
-    ssh_cmd=$(build_ssh_cmd "$cmd")
+    build_ssh_cmd
 
     if [[ "${DEBUG:-0}" == "1" ]]; then
-        echo "[DEBUG] 执行: $ssh_cmd"
+        echo "[DEBUG] 执行: ${SSH_CMD[*]} $cmd"
     fi
 
-    eval "$ssh_cmd"
+    "${SSH_CMD[@]}" "$cmd"
 }
 
-# 彩色输出
+# 验证参数为数字
+validate_number() {
+    local val="$1"
+    local name="$2"
+    if [[ ! "$val" =~ ^[0-9]+$ ]]; then
+        echo "错误: $name 必须是数字，当前值: $val"
+        exit 1
+    fi
+}
+
+# 验证参数为安全字符串（允许字母、数字、连字符、下划线）
+validate_safe_string() {
+    local val="$1"
+    local name="$2"
+    if [[ ! "$val" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "错误: $name 包含非法字符，只能包含字母、数字、连字符、下划线"
+        exit 1
+    fi
+}
+
+# 验证 SSH 主机格式
+validate_host() {
+    local host="$1"
+    # 允许 IP 或域名格式
+    if [[ ! "$host" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]$ ]] && [[ ! "$host" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "错误: CLOUD_HOST 格式不正确: $host"
+        exit 1
+    fi
+}
 red() { echo -e "\033[31m$*\033[0m"; }
 green() { echo -e "\033[32m$*\033[0m"; }
 yellow() { echo -e "\033[33m$*\033[0m"; }
@@ -155,6 +185,7 @@ cmd_logs_path() {
 # cleanup - 清理日志
 cmd_cleanup() {
     local days="${1:-7}"
+    validate_number "$days" "天数"
     echo "清理 $days 天前的日志..."
 
     ssh_exec "find /tmp/openclaw/ -name 'openclaw-*.log' -mtime +$days -delete 2>/dev/null || true"
@@ -213,6 +244,13 @@ cmd_version() {
 # update - 更新
 cmd_update() {
     local channel="${1:-stable}"
+
+    # 验证 channel 在白名单内
+    if [[ ! "$channel" =~ ^(stable|beta|dev)$ ]]; then
+        echo "错误: channel 必须是 stable, beta 或 dev 之一，当前值: $channel"
+        exit 1
+    fi
+
     echo "更新 OpenClaw ($channel)..."
 
     ssh_exec "openclaw update --channel $channel"
@@ -233,19 +271,11 @@ cmd_tunnel() {
     echo "按 Ctrl+C 退出"
     echo ""
 
-    local ssh_cmd="ssh"
-    if [[ "$CLOUD_PORT" != "22" ]]; then
-        ssh_cmd="$ssh_cmd -p $CLOUD_PORT"
-    fi
-    if [[ -n "$SSH_KEY_PATH" ]]; then
-        local expanded_key="${SSH_KEY_PATH/#\~/$HOME}"
-        ssh_cmd="$ssh_cmd -i '$expanded_key'"
-    fi
+    build_ssh_cmd
+    local tunnel_cmd=("${SSH_CMD[@]}" -N -L "${OPENCLAW_PORT}:127.0.0.1:${OPENCLAW_PORT}")
 
-    ssh_cmd="$ssh_cmd -N -L ${OPENCLAW_PORT}:127.0.0.1:${OPENCLAW_PORT} ${CLOUD_USER}@${CLOUD_HOST}"
-
-    echo "执行: $ssh_cmd"
-    eval "$ssh_cmd"
+    echo "执行: ${tunnel_cmd[*]}"
+    "${tunnel_cmd[@]}"
 }
 
 # remote - 远程命令（通过 SSH 隧道）
@@ -253,8 +283,22 @@ cmd_remote() {
     local subcmd="${1:-status}"
     shift
 
-    echo "执行远程命令: openclaw $subcmd $*"
-    ssh_exec "openclaw $subcmd $*"
+    # 验证子命令安全
+    validate_safe_string "$subcmd" "子命令"
+
+    # 将剩余参数转为安全格式（只传递，不执行）
+    local args=""
+    for arg in "$@"; do
+        # 验证每个参数不含危险字符
+        if [[ "$arg" =~ ^[a-zA-Z0-9_./-]+$ ]]; then
+            args="$args $arg"
+        else
+            echo "警告: 参数包含特殊字符，已跳过: $arg"
+        fi
+    done
+
+    echo "执行远程命令: openclaw $subcmd$args"
+    ssh_exec "openclaw $subcmd$args"
 }
 
 # diag - 综合诊断
@@ -380,9 +424,17 @@ EOF
 
 # ============== 主程序 ==============
 
+# help 不需要配置
+case "${1:-help}" in
+    help|--help|-h)
+        cmd_help
+        exit 0
+        ;;
+esac
+
 load_config
 
-case "${1:-help}" in
+case "$1" in
     doctor)
         cmd_doctor
         ;;
@@ -443,9 +495,6 @@ case "${1:-help}" in
         ;;
     diag)
         cmd_diag
-        ;;
-    help|--help|-h)
-        cmd_help
         ;;
     *)
         echo "未知命令: $1"
