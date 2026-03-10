@@ -30,7 +30,7 @@ load_config() {
         echo "错误: 未配置 CLOUD_HOST"
         echo ""
         echo "请先配置 ~/.config/cloud-openclaw/config.sh"
-        echo "参考: https://github.com/你的用户名/cloud-openclaw#1-首次配置"
+        echo "参考: https://github.com/IsaacZhaoo/cloud-openclaw#1-首次配置"
         exit 1
     fi
 }
