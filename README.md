@@ -59,6 +59,20 @@ bash ~/openclaw.sh diag     # 综合诊断
 bash ~/openclaw.sh restart  # 重启服务
 ```
 
+### 方法3：一键安装为 Claude Code Skill（推荐）
+
+```bash
+# 克隆到 Claude Code skills 目录
+git clone https://github.com/IsaacZhaoo/cloud-openclaw.git ~/.claude/skills/cloud-openclaw
+```
+
+安装后，直接告诉 AI：
+- 「帮我看看 OpenClaw 服务挂了没」
+- 「最近日志有什么错误吗」
+- 「帮我清理一下服务器」
+
+AI 会自动使用这个 Skill 帮你操作服务器。
+
 ## 常用命令
 
 | 命令 | 说明 |
