@@ -1,0 +1,11 @@
+{
+  "name": "cloud-openclaw",
+  "description": "通过 SSH 管理远程云服务器上的 OpenClaw 服务。从安装到运维，一条龙服务。",
+  "version": "1.0.0",
+  "author": {
+    "name": "有光"
+  },
+  "homepage": "https://github.com/IsaacZhaoo/cloud-openclaw",
+  "license": "MIT",
+  "keywords": ["openclaw", "ssh", "server", "devops"]
+}

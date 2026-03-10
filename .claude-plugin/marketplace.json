@@ -1,0 +1,16 @@
+{
+  "name": "cloud-openclaw-marketplace",
+  "owner": {
+    "name": "有光"
+  },
+  "metadata": {
+    "description": "OpenClaw 云服务管理插件市场"
+  },
+  "plugins": [
+    {
+      "name": "cloud-openclaw",
+      "source": ".",
+      "description": "通过 SSH 管理远程云服务器上的 OpenClaw 服务"
+    }
+  ]
+}
