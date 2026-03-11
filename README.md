@@ -1,3 +1,79 @@
+# OpenClaw Cloud Management Skill
+
+Let AI install and manage OpenClaw on your cloud server. No commands to memorize — just ask.
+
+## What Problem Does This Solve?
+
+- Installed OpenClaw but don't know how to maintain it?
+- Searching for answers every time something breaks?
+- Don't want to SSH into your server every day?
+
+This skill solves all of that: when something goes wrong, just ask AI.
+
+## Installation
+
+### Method 1: Claude Code Plugin (Recommended)
+
+Run in Claude Code:
+
+```
+/plugin marketplace add IsaacZhaoo/cloud-openclaw
+/plugin install cloud-openclaw@cloud-openclaw-marketplace
+```
+
+After installation, just tell AI what you need:
+- "Check if my OpenClaw service is running"
+- "Are there any errors in the recent logs?"
+- "Clean up my server"
+
+### Method 2: Manual Install for Claude Code
+
+```bash
+git clone https://github.com/IsaacZhaoo/cloud-openclaw.git ~/.claude/skills/cloud-openclaw
+```
+
+### Method 3: Just Give AI the Repo Link
+
+Hand the link to your AI assistant and let it figure out the rest:
+
+```
+https://github.com/IsaacZhaoo/cloud-openclaw
+```
+
+## Prerequisites
+
+- A computer (Mac / Windows / Linux)
+- SSH access to your cloud server
+- An AI assistant (Claude Code / Gemini CLI)
+
+## What You Can Do
+
+- Install or update OpenClaw
+- Check service status and logs
+- Restart services and troubleshoot issues
+- Clean up disk space and monitor resources
+- Set up SSH tunnels for remote access
+
+All operations use natural language. No commands to remember.
+
+## FAQ
+
+**Q: Do I need to memorize commands?**
+A: No. Just ask AI.
+
+**Q: Can I use this on my phone?**
+A: No. You need an AI CLI tool on a computer.
+
+**Q: Is it free?**
+A: Yes, free and open source.
+
+## Links
+
+- [OpenClaw Official](https://github.com/openclaw/openclaw)
+- [OpenClaw Docs](https://docs.openclaw.ai)
+
+---
+
 # OpenClaw 云服务管理工具
 
 让 AI 帮你安装和运维 OpenClaw。不需要记命令，直接问 AI 就行。

@@ -1,6 +1,127 @@
 ---
 name: cloud-openclaw
-description: 通过 SSH 管理远程云服务器上的 OpenClaw 服务。从安装到运维，一条龙服务。不需要记命令，直接问AI就行。适合不具备复杂运维知识的小白用户。
+description: Manage OpenClaw services on remote cloud servers via SSH. From installation to operations — full lifecycle support. No commands to memorize, just ask AI. Designed for users without server administration experience.
+---
+
+# OpenClaw Operations Skill
+
+This Skill helps AI manage OpenClaw services on remote cloud servers via SSH.
+
+## When to Use
+
+Use this Skill when the user requests:
+
+- First-time OpenClaw installation
+- Starting / stopping / restarting OpenClaw services
+- Viewing logs to troubleshoot issues
+- Cleaning up temp files to free disk space
+- Diagnosing service failures
+
+## Prerequisites
+
+Before running any operation, verify:
+
+1. **SSH config**: Check if `~/.config/cloud-openclaw/config.sh` exists
+2. **Script availability**: Confirm `~/openclaw.sh` is present and executable
+
+If the config doesn't exist, guide the user to create it:
+
+```bash
+mkdir -p ~/.config/cloud-openclaw
+cat > ~/.config/cloud-openclaw/config.sh << 'EOF'
+export CLOUD_HOST="server-ip"
+export CLOUD_USER="root"
+export CLOUD_PORT="22"
+EOF
+```
+
+## Command Reference
+
+| Action | Command |
+|--------|---------|
+| Check status | `bash openclaw.sh status` |
+| Full diagnosis | `bash openclaw.sh diag` |
+| View logs | `bash openclaw.sh logs` |
+| Restart service | `bash openclaw.sh restart` |
+| Clean up disk | `bash openclaw.sh cleanup` |
+| Check disk usage | `bash openclaw.sh disk` |
+| Check memory | `bash openclaw.sh memory` |
+
+## Troubleshooting Workflow
+
+When a user reports an OpenClaw problem, follow these steps:
+
+### Step 1: Run Full Diagnosis
+
+```bash
+bash openclaw.sh diag
+```
+
+Checks: service status, ports, version, recent errors, disk, memory, processes, Doctor
+
+### Step 2: Identify the Problem
+
+| Symptom | Possible Cause | Commands |
+|---------|---------------|----------|
+| Service stopped | Process crash / port conflict / config error | `logs`, `ports`, `config` |
+| Running but unreachable | Firewall / port binding / gateway issue | `ports`, `logs` |
+| Auth/login failure | Expired token / config error | `doctor`, `logs` |
+| Slow response | Low disk space / low memory | `disk`, `memory` |
+
+### Step 3: Deep Investigation
+
+```bash
+# Recent logs
+bash openclaw.sh logs 50
+
+# Live log stream
+bash openclaw.sh logs -f
+
+# Check processes
+bash openclaw.sh process
+
+# Check ports
+bash openclaw.sh ports
+
+# Doctor diagnosis
+bash openclaw.sh doctor
+```
+
+### Step 4: Fix
+
+```bash
+# Restart service
+bash openclaw.sh restart
+
+# Clean logs older than 14 days
+bash openclaw.sh cleanup 14
+
+# Update to stable version
+bash openclaw.sh update stable
+```
+
+## SSH Tunnel
+
+For local access to remote OpenClaw:
+
+```bash
+# Create tunnel
+bash openclaw.sh tunnel
+
+# Remote commands
+bash openclaw.sh remote status
+bash openclaw.sh remote health
+```
+
+## Detailed Reference
+
+See `references/troubleshooting.md` for the full troubleshooting guide.
+
+## Resources
+
+- OpenClaw Official: https://github.com/openclaw/openclaw
+- OpenClaw Docs: https://docs.openclaw.ai
+
 ---
 
 # OpenClaw 运维 Skill
